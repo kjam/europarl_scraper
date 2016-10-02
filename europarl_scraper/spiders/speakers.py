@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-from scrapy.contrib.spiders import CrawlSpider, Rule
-from scrapy.contrib.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 from europarl_scraper.items import EuroparlMember, EuroparlText
 import re
 import requests
-
 
 def get_start_urls():
     """ populate start urls with full search json """

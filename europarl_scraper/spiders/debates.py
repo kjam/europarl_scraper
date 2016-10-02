@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from scrapy.contrib.spiders import CrawlSpider, Rule
-from scrapy.contrib.linkextractors import LinkExtractor
+from scrapy.spiders import Spider
 from europarl_scraper.items import EuroparlDebate
 import re
 import requests
@@ -10,53 +9,35 @@ def get_start_urls():
     """ populate start urls with full search json """
     resp = requests.post(
         'http://www.europarl.europa.eu/meps/en/json/newperformsearchjson.html')
-    return ['http://www.europarl.europa.eu{}'.format(r.get('detailUrl'))
-            for r in resp.json().get('result')]
+    speaker_urls = ['http://www.europarl.europa.eu{}'.format(r.get('detailUrl'))
+                    for r in resp.json().get('result')]
+    all_speeches = []
+    # want to merely test with a smaller set? uncomment below and comment out
+    # matching line in for loop. It will give you only 90 speeches :)
+    next_page, index = True, 0
+    for speaker in speaker_urls:
+        # next_page, index = True, 0
+        url_split = speaker.split('/')[:-1]
+        url_split.append('see_more.html')
+        base_url = '/'.join(url_split)
+        while next_page:
+            resp = requests.get(base_url,
+                                params={'type': 'CRE', 'index': index})
+            if resp.json().get('nextIndex') == -1:
+                next_page = False
+            else:
+                index = resp.json().get('nextIndex')
+            all_speeches.extend([s.get('titleUrl').split('&amp')[0]
+                                 for s in resp.json().get('documentList')])
+    return all_speeches
 
 
-def get_initial_list():
-    """ populate initial list used for xtra data with full search json """
-    resp = requests.post(
-        'http://www.europarl.europa.eu/meps/en/json/newperformsearchjson.html')
-    return resp.json().get('result')
-
-
-class EuroParlSpeakerSpider(CrawlSpider):
-    """ crawl spider for european parliament speakers """
-    name = "europarl_speaker"
+class EuroParlDebateSpider(Spider):
+    """ crawl spider for european parliament debates """
+    name = "europarl_debates"
     allowed_domains = ["europarl.europa.eu"]
     start_urls = get_start_urls()
     response = None
-    initial_list = get_initial_list()
-
-    rules = (
-        Rule(
-            LinkExtractor(
-                allow=r'/meps/en/[\d]+/[A-Z_]+_home.html'
-            ),
-            follow=True,
-        ),
-        Rule(
-            LinkExtractor(
-                allow=[r'/meps/en/[\d]+/seeall.html?type=[A-Z]+',
-                       r'/sides/getDoc.do?pubRef=-//EP//[\w\d_\-\\\/]+', ],
-            ),
-            follow=True,
-        ),
-    )
-    more_rules = """Rule(
-            LinkExtractor(
-                allow=''
-            ),
-            follow=True,
-            callback='parse_speeches',),
-        Rule(
-            LinkExtractor(
-                allow=''
-            ),
-            follow=True,
-            callback='parse_debate',),
-        """
 
     def remove_returns(self, my_string):
         """ remove returns from strings """
@@ -80,9 +61,56 @@ class EuroParlSpeakerSpider(CrawlSpider):
             return ''
         return item
 
-    def parse_debate(self, response):
-        """ parse a speaker page and extract items """
+    def parse(self, response):
+        """ parse a debate page and extract items """
+        items = []
         self.response = response
-        item = EuroparlDebate()
-        item['text_url'] = response.url
-        return item
+        counter = 1
+        topic = ''.join(
+            self.grab_xpath('//td[@class="doc_title"]/text()|' +
+                            '//td[@class="doc_title"]/a/text()')[2:])
+        topic_links = self.grab_xpath('//td[@class="doc_title"]/a/@href')
+        speech_type = self.grab_xpath('//td[@class="title_TA"]/text()')
+        date_and_location = self.grab_xpath(
+            '//td[@class="doc_title"]/text()')[0]
+        speech_date = date_and_location.split('-')[0]
+        speech_location = date_and_location.split('-')[1]
+        item = None
+
+        for table in response.xpath('//table[tr/td/table]'):
+            item = EuroparlDebate()
+            item['text_url'] = response.url
+            item['speech_location'] = speech_location
+            item['speech_date'] = speech_date
+            item['speech_type'] = speech_type
+            item['topic_links'] = topic_links
+            item['topic'] = topic
+            item['order'] = counter
+            speaker_photo = table.xpath(
+                'tr/td/table/tr/td/img[@alt="MPphoto"]/@src').extract()
+            if not speaker_photo or re.search(r'[\d]+', speaker_photo[0]) is None:
+                continue
+            item['speaker_id'] = re.search(r'[\d]+', speaker_photo[0]).group()
+            speaker_info = table.xpath(
+                'tr/td/p/span[@class="doc_subtitle_level1_bis"]/text()'
+            ).extract()[0]
+            try:
+                item['pol_group'] = re.search(
+                    r'\(\w+\)', speaker_info).group().lstrip('(').rstrip(')')
+            except AttributeError:
+                item['pol_group'] = 'n/a'
+
+            try:
+                item['note'] = table.xpath(
+                    'tr/td/p[@class="contents"]/span[@class="italic"]/text()'
+                ).extract()[0]
+            except IndexError:
+                item['note'] = ''
+            if item['pol_group'] == 'n/a' and re.search('[A-Z]+', item['note']):
+                # sometimes the party is instead in the note
+                item['pol_group'] = re.search('[A-Z]+', item['note']).group()
+            item['text'] = table.xpath('tr/td/p[@class="contents"]/text()')
+            items.append(item)
+            counter += 1
+
+        return items

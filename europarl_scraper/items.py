@@ -43,6 +43,7 @@ class EuroparlText(scrapy.Item):
     topic_links = scrapy.Field()
     note = scrapy.Field()
     text = scrapy.Field()
+    language = scrapy.Field()
     speech_type = scrapy.Field()
     speech_date = scrapy.Field()
     speech_location = scrapy.Field()
@@ -51,6 +52,7 @@ class EuroparlText(scrapy.Item):
 class EuroparlDebate(scrapy.Item):
     """ Data points for each debate from EP website """
     text_url = scrapy.Field()
+    speaker_id = scrapy.Field()
     order = scrapy.Field()
     pol_group = scrapy.Field()
     topic = scrapy.Field()
