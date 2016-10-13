@@ -26,6 +26,7 @@ class EuroparlMember(scrapy.Item):
     website = scrapy.Field()
     twitter = scrapy.Field()
     facebook = scrapy.Field()
+    num_speeches = scrapy.Field()
     num_reports = scrapy.Field()
     num_opinions = scrapy.Field()
     num_motions = scrapy.Field()

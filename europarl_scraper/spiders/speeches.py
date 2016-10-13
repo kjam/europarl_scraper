@@ -60,7 +60,7 @@ class EuroParlSpeechSpider(Spider):
             '//td[@class="doc_title"]/a/@href')
         item['note'] = self.grab_xpath(
             '//p[@class="contents"]/span[@class="italic"]/text()')
-        if item['pol_group'] == 'n/a' and re.search('[A-Z]+', item['note']):
+        if item['pol_group'] == 'n/a' and item['note'] and re.search(r'[A-Z]+', item['note']):
             # sometimes the party is instead in the note
             item['pol_group'] = re.search('[A-Z]+', item['note']).group()
         item['text'] = self.grab_xpath('//p[@class="contents"]/text()')
