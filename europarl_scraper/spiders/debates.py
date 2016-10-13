@@ -4,14 +4,15 @@ from europarl_scraper.items import EuroparlDebate
 import re
 import requests
 import pandas as pd
+import os
 
-DATA_DIR = os.path.abspath(os.join.path(
+DATA_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), '..', '..', 'data'))
 
 def clean_start_urls():
-    start_urls = pd.read_csv(
-        os.path.join(DATA_DIR, 'speech_urls.csv')).url.values
-    yield from [u.split('&amp')[0] for u in start_urls]
+    df = pd.read_csv(os.path.join(DATA_DIR, 'speech_urls.csv'))
+    start_urls = map(lambda x: x.split('&amp')[0], df.url.values)
+    yield from set(start_urls)
 
 
 class EuroParlDebateSpider(Spider):

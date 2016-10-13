@@ -6,7 +6,7 @@ import requests
 import pandas as pd
 import os
 
-DATA_DIR = os.path.abspath(os.join.path(
+DATA_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), '..', '..', 'data'))
 
 class EuroParlSpeechSpider(Spider):
