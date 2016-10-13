@@ -3,40 +3,19 @@ from scrapy.spiders import Spider
 from europarl_scraper.items import EuroparlDebate
 import re
 import requests
+import pandas as pd
 
 
-def get_start_urls():
-    """ populate start urls with full search json """
-    resp = requests.post(
-        'http://www.europarl.europa.eu/meps/en/json/newperformsearchjson.html')
-    speaker_urls = ['http://www.europarl.europa.eu{}'.format(r.get('detailUrl'))
-                    for r in resp.json().get('result')]
-    all_speeches = []
-    # want to merely test with a smaller set? uncomment below and comment out
-    # matching line in for loop. It will give you only 90 speeches :)
-    next_page, index = True, 0
-    for speaker in speaker_urls:
-        # next_page, index = True, 0
-        url_split = speaker.split('/')[:-1]
-        url_split.append('see_more.html')
-        base_url = '/'.join(url_split)
-        while next_page:
-            resp = requests.get(base_url,
-                                params={'type': 'CRE', 'index': index})
-            if resp.json().get('nextIndex') == -1:
-                next_page = False
-            else:
-                index = resp.json().get('nextIndex')
-            all_speeches.extend([s.get('titleUrl').split('&amp')[0]
-                                 for s in resp.json().get('documentList')])
-    return all_speeches
+def clean_start_urls():
+    start_urls = pd.read_csv('../../data/speech_urls.csv').url.values
+    yield from [u.split('&amp')[0] for u in start_urls]
 
 
 class EuroParlDebateSpider(Spider):
     """ crawl spider for european parliament debates """
     name = "europarl_debates"
     allowed_domains = ["europarl.europa.eu"]
-    start_urls = get_start_urls()
+    start_urls = clean_start_urls()
     response = None
 
     def remove_returns(self, my_string):

@@ -62,4 +62,5 @@ docs/_build/
 # PyBuilder
 target/
 
+data/*.csv
 *~
