@@ -5,9 +5,12 @@ import re
 import requests
 import pandas as pd
 
+DATA_DIR = os.path.abspath(os.join.path(
+    os.path.dirname(__file__), '..', '..', 'data'))
 
 def clean_start_urls():
-    start_urls = pd.read_csv('../../data/speech_urls.csv').url.values
+    start_urls = pd.read_csv(
+        os.path.join(DATA_DIR, 'speech_urls.csv')).url.values
     yield from [u.split('&amp')[0] for u in start_urls]
 
 

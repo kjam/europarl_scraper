@@ -2,6 +2,7 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from europarl_scraper.items import EuroparlMember, EuroparlText
+from lxml import html
 import re
 import requests
 
@@ -115,21 +116,49 @@ class EuroParlSpeakerSpider(CrawlSpider):
             '//ul[@class="link_collection_noborder"]/li/a[@class="link_twitt"]/@href',
             return_str=True)
 
-        # TODO: add nums from _activities.html
-        # activity_page = requests.get(response.url.replace('home', 'activities'))
+        activity_page = requests.get(response.url.replace('home', 'activities'))
+        activity_tree = html.fromstring(activity_page.content)
+        ns = activity_tree.xpath('//div[h3[@id="section1"]]/p/text()')
+        item['num_speeches'] = (lambda x: int(x[0]) if len(x) else 0)(ns)
 
-        item['num_reports'] = 0
-        item['num_opinions'] = 0
-        item['num_motions'] = 0
-        item['num_declarations'] = 0
-        item['num_questions'] = 0
+        nr = activity_tree.xpath('//div[h3[@id="section2"]]/p/text()')
+        nr.extend(activity_tree.xpath('//div[h3[@id="section3"]]/p/text()'))
 
-        # history_page = requests.get(response.url.replace('home', 'history'))
-        # TODO: add parsing from _history.html
+        item['num_reports'] = sum([int(n) for n in nr if n])
 
-        item['all_pol_groups'] = []
-        item['natl_pol_groups'] = []
-        item['chair_positions'] = []
+        no = activity_tree.xpath('//div[h3[@id="section4"]]/p/text()')
+        no.extend(activity_tree.xpath('//div[h3[@id="section5"]]/p/text()'))
+
+        item['num_opinions'] = sum([int(n) for n in nr if n])
+
+        nm = activity_tree.xpath('//div[h3[@id="section6"]]/p/text()')
+        item['num_motions'] = (lambda x: int(x[0]) if len(x) else 0)(nm)
+
+        sect_eight = activity_tree.xpath('//div[h3[@id="section8"]]/p/text()')
+
+        if sect_eight:
+            item['num_questions'] = (lambda x: int(x[0]) if len(x) else 0)(
+                sect_eight)
+            nd = activity_tree.xpath('//div[h3[@id="section7"]]/p/text()')
+            item['num_declarations'] = (lambda x:
+                                        int(x[0]) if len(x) else 0)(nd)
+        else:
+            ns = activity_tree.xpath('//div[h3[@id="section7"]]/p/text()')
+            item['num_questions'] = (lambda x: int(x[0]) if len(x) else 0)(ns)
+            item['num_declarations'] = 0
+
+        history_page = requests.get(response.url.replace('home', 'history'))
+        history_tree = html.fromstring(history_page.content)
+
+        apg = history_tree.xpath(
+            '//div[h4[contains(text(), "Political Groups")]]/ul/li/text()')
+        item['all_pol_groups'] = [ap.strip() for ap in apg]
+        npg = history_tree.xpath(
+            '//div[h4[contains(text(), "National Parties")]]/ul/li/text()')
+        item['natl_pol_groups'] = [np.strip() for np in npg]
+        cpg = history_tree.xpath(
+            '//div[h4[contains(text(), "Chair")]]/ul/li/text()')
+        item['chair_positions'] = [cp.strip() for cp in cpg]
 
         split_url = response.url.split('/')[:-1]
         split_url.append('seeall.html?type=CRE')

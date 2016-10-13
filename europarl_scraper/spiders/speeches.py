@@ -4,13 +4,17 @@ from europarl_scraper.items import EuroparlText
 import re
 import requests
 import pandas as pd
+import os
 
+DATA_DIR = os.path.abspath(os.join.path(
+    os.path.dirname(__file__), '..', '..', 'data'))
 
 class EuroParlSpeechSpider(Spider):
     """ crawl spider for european parliament speakers """
     name = "europarl_speeches"
     allowed_domains = ["europarl.europa.eu"]
-    start_urls = pd.read_csv('../../data/speech_urls.csv').url.values
+    start_urls = pd.read_csv(
+        os.path.join(DATA_DIR, 'speech_urls.csv')).url.values
     response = None
 
     def remove_returns(self, my_string):
