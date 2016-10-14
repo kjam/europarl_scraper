@@ -23,7 +23,7 @@ def get_initial_list():
 
 class EuroParlSpeakerSpider(CrawlSpider):
     """ crawl spider for european parliament speakers """
-    name = "europarl_speaker"
+    name = "europarl_speakers"
     allowed_domains = ["europarl.europa.eu"]
     start_urls = get_start_urls()
     response = None
@@ -78,6 +78,8 @@ class EuroParlSpeakerSpider(CrawlSpider):
                 item = float(item)
         if return_str and item == []:
             return ''
+        elif return_str:
+            return ';'.join(item)
         return item
 
     def parse_speaker(self, response):
@@ -106,7 +108,8 @@ class EuroParlSpeakerSpider(CrawlSpider):
         item['curr_pol_group_abbr'] = self.grab_xpath(
             '//li[contains(@class, "group")]/@class').lstrip('group ')
         item['email'] = self.grab_xpath(
-            '//a[@class="link_email"]/@href', return_str=True).lstrip('mailto:')
+            '//a[@class="link_email"]/@href', return_str=True).replace(
+                'mailto:', '')
         item['website'] = self.grab_xpath(
             '//a[@class="link_website"]/@href', return_str=True)
         item['facebook'] = self.grab_xpath(
