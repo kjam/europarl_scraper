@@ -37,7 +37,7 @@ class EuroParlSpeechSpider(Spider):
                 item = float(item)
         if return_str and item == []:
             return ''
-        elif return_str:
+        elif return_str and isinstance(item, list):
             return ';'.join(item)
         return item
 
@@ -47,9 +47,12 @@ class EuroParlSpeechSpider(Spider):
         item = EuroparlText()
         item['text_url'] = response.url
         speaker_photo = self.grab_xpath('//td/img[@alt="MPphoto"]/@src')
-        item['speaker_id'] = re.search(r'[\d]+', speaker_photo).group()
+        try:
+            item['speaker_id'] = re.search(r'[\d]+', speaker_photo).group()
+        except AttributeError:
+            item['speaker_id'] = 'n/a'
         speaker_info = self.grab_xpath(
-            '//p/span[@class="doc_subtitle_level1_bis"]/text()')
+            '//p/span[@class="doc_subtitle_level1_bis"]/text()', return_str=True)
         try:
             item['pol_group'] = re.search(
                 r'\(\w+\)', speaker_info).group().lstrip('(').rstrip(')')
