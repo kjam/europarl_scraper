@@ -53,6 +53,7 @@ class EuroParlSpeechSpider(Spider):
             item['speaker_id'] = 'n/a'
         speaker_info = self.grab_xpath(
             '//p/span[@class="doc_subtitle_level1_bis"]/text()', return_str=True)
+        item['speaker_name'] = speaker_info.split('(')[0].strip()
         try:
             item['pol_group'] = re.search(
                 r'\(\w+\)', speaker_info).group().lstrip('(').rstrip(')')

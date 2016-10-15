@@ -38,6 +38,7 @@ class EuroparlMember(scrapy.Item):
 class EuroparlText(scrapy.Item):
     """ Data points for each speech from EP website """
     speaker_id = scrapy.Field()
+    speaker_name = scrapy.Field()
     text_url = scrapy.Field()
     pol_group = scrapy.Field()
     topic = scrapy.Field()
@@ -54,6 +55,7 @@ class EuroparlDebate(scrapy.Item):
     """ Data points for each debate from EP website """
     text_url = scrapy.Field()
     speaker_id = scrapy.Field()
+    speaker_name = scrapy.Field()
     order = scrapy.Field()
     pol_group = scrapy.Field()
     topic = scrapy.Field()

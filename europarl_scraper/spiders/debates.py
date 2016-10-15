@@ -72,11 +72,17 @@ class EuroParlDebateSpider(Spider):
             speaker_photo = table.xpath(
                 'tr/td/table/tr/td/img[@alt="MPphoto"]/@src').extract()
             if not speaker_photo or re.search(r'[\d]+', speaker_photo[0]) is None:
+                item['speaker_id'] = 'n/a'
+            else:
+                item['speaker_id'] = re.search(r'[\d]+', speaker_photo[0]).group()
+            try:
+                speaker_info = table.xpath(
+                    'tr/td/p/span[@class="doc_subtitle_level1_bis"]/text()'
+                ).extract()[0]
+                item['speaker_name'] = speaker_info.split('(')[0].strip()
+            except IndexError:
+                # these are usually procedural notes
                 continue
-            item['speaker_id'] = re.search(r'[\d]+', speaker_photo[0]).group()
-            speaker_info = table.xpath(
-                'tr/td/p/span[@class="doc_subtitle_level1_bis"]/text()'
-            ).extract()[0]
             try:
                 item['pol_group'] = re.search(
                     r'\(\w+\)', speaker_info).group().lstrip('(').rstrip(')')
@@ -92,7 +98,8 @@ class EuroParlDebateSpider(Spider):
             if item['pol_group'] == 'n/a' and re.search('[A-Z]+', item['note']):
                 # sometimes the party is instead in the note
                 item['pol_group'] = re.search('[A-Z]+', item['note']).group()
-            item['text'] = table.xpath('tr/td/p[@class="contents"]/text()')
+            item['text'] = self.remove_returns(' '.join(
+                table.xpath('tr/td/p[@class="contents"]/text()').extract()))
             items.append(item)
             counter += 1
 
