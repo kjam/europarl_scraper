@@ -63,5 +63,6 @@ docs/_build/
 target/
 
 data/*.csv
+data/*.txt
 *~
 notebooks/.ipynb_checkpoints/*
