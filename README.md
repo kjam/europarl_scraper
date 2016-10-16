@@ -12,6 +12,7 @@ It's on S3 in a public bucket!
  
  * https://s3.eu-central-1.amazonaws.com/europarlspeeches/speech_urls.csv
  * https://s3.eu-central-1.amazonaws.com/europarlspeeches/speeches.csv
+ * https://s3.eu-central-1.amazonaws.com/europarlspeeches/europarl_speech_text.txt (this is ONLY the speech text)
  * https://s3.eu-central-1.amazonaws.com/europarlspeeches/speakers.csv
  * https://s3.eu-central-1.amazonaws.com/europarlspeeches/debates.csv
 
