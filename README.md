@@ -21,9 +21,10 @@ It's on S3 in a public bucket!
 * First, grab the start urls. Run python get_urls.py
 
 * Then, run any of the scrapers:
-    `scrapy crawl europarl_speeches -o data/speeches.csv`
-    `scrapy crawl europarl_debates -o data/debates.csv`
-    `scrapy crawl europarl_speakers -o data/speakers.csv`
+
+`scrapy crawl europarl_speeches -o data/speeches.csv`
+`scrapy crawl europarl_debates -o data/debates.csv`
+`scrapy crawl europarl_speakers -o data/speakers.csv`
 
 ## Notes
 
