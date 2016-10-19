@@ -31,6 +31,10 @@ It's on S3 in a public bucket!
 
 There are many TODO's for this still, so plz be patient.
 
+* Figure out why not all members are in initial JSON
+* Where are sources for this? https://github.com/eliflab/European-Parliament-Open-Data/blob/master/meps_full_list_with_twitter_accounts.csv
+* How to divide work to speed up?
+
 ## Questions?
 
 Feel free to reach out on Twitter or Freenode (@kjam).
